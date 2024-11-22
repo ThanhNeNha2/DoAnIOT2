@@ -12,6 +12,7 @@ import NewProduct from "./pages/newProduct/NewProduct";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
 import { Toaster } from "react-hot-toast";
+import Control from "./pages/Control/Control";
 function App() {
   const location = window.location.pathname;
   const user = JSON.parse(localStorage.getItem("user"));
@@ -55,6 +56,9 @@ function App() {
           </Route>
           <Route path="/register">
             <Register />
+          </Route>
+          <Route path="/control">
+            <Control />
           </Route>
         </Switch>
       </div>

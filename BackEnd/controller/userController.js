@@ -8,7 +8,7 @@ const getAllUser = async (req, res) => {
   } catch (error) {
     console.log("Error", error);
     return res.status(500).json({
-      mess: "Create user don't success!",
+      mess: "Get  failed !",
     });
   }
 };

@@ -45,10 +45,13 @@ export default function Sidebar() {
               <Timeline className="sidebarIcon" />
               Analytics
             </li>
+            <Link to="/control" className="link">
+
             <li className="sidebarListItem">
               <TrendingUp className="sidebarIcon" />
-              Sales
-            </li>
+              Control  </li>
+            </Link>
+
           </ul>
         </div>
         <div className="sidebarMenu">
