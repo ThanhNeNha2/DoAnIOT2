@@ -58,7 +58,7 @@ export default function Register() {
         <div className="form-box">
           <div className="form-value">
             <form>
-              <h2>Register</h2>
+              <h2 className="h2-register">Register</h2>
               {/*  USER  */}
               <div className="inputbox">
                 <div className="ion-icon">

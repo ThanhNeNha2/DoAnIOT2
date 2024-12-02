@@ -3,11 +3,21 @@ import Table from "react-bootstrap/Table";
 import "./Control.css";
 import Form from "react-bootstrap/Form";
 import { db, ref, onValue, update } from "../../firebase";
+import { useHistory } from "react-router-dom/cjs/react-router-dom";
 
 export default function Control() {
+  const history = useHistory();
+
+  useEffect(() => {
+    const checkLocal = JSON.parse(localStorage.getItem("user"));
+    if (!checkLocal) {
+      history.push("/login"); // Chuyển hướng đến "/destination"
+    }
+  }, []);
+
   const [door, setDoor] = useState("");
   const [doorChecked, setDoorChecked] = useState(false);
-  console.log(doorChecked);
+  // console.log(doorChecked);
 
   useEffect(() => {
     const data = ref(db);
