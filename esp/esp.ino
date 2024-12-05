@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #if defined(ESP32)
-  #include <WiFi.h>
+#include <WiFi.h>
 #elif defined(ESP8266)
-  #include <ESP8266WiFi.h>
+#include <ESP8266WiFi.h>
 #endif
 #include <Firebase_ESP_Client.h>
 
@@ -25,10 +25,10 @@ FirebaseData fbdo;
 
 FirebaseAuth auth;
 FirebaseConfig config;
-#define TX D2  // GPIO4
-#define RX D1  // GPIO5
-SoftwareSerial mySerial(TX, RX);
-// mình cắm chân tx rx gnd 3 chân đó á b 
+#define TX D6  // GPIO4
+#define RX D5  // GPIO5
+SoftwareSerial mySerial(RX, TX);
+// mình cắm chân tx rx gnd 3 chân đó á b
 unsigned long readDataPrevMillis = 0;
 bool signupOK = false;
 
@@ -44,7 +44,7 @@ void setup() {
   // Đổi baud rate ở đây
   Serial.begin(9600);
   mySerial.begin(9600);
-  
+
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -78,7 +78,7 @@ void setup() {
 }
 
 void loop() {
-  if (Firebase.ready() && signupOK && (millis() - readDataPrevMillis > 15000 || readDataPrevMillis == 0)) {
+  if (millis() - readDataPrevMillis > 2000) {  // Kiểm tra 2 giây/lần
     readDataPrevMillis = millis();
 
     // Đọc giá trị của nút "DOOR" từ Firebase
@@ -89,9 +89,9 @@ void loop() {
 
       // Gửi tín hiệu ON/OFF qua Serial
       if (doorStatus == "ON") {
-        mySerial.println("ON");
+        mySerial.println("ON");  // Kèm theo '\n'
       } else if (doorStatus == "OFF") {
-        mySerial.println("OFF"); 
+        mySerial.println("OFF");  // Kèm theo '\n'
       }
     } else {
       Serial.printf("Failed to get data: %s\n", fbdo.errorReason().c_str());

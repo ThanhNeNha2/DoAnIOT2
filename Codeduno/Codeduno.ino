@@ -5,7 +5,6 @@
 #include <LiquidCrystal_I2C.h>
 #include <SPI.h>
 #include <SoftwareSerial.h>
-SoftwareSerial espSerial(10, 11);  // RX, TX
 
 #include <MFRC522.h>                 // Khai báo thư viện LCD sử dụng I2C
 LiquidCrystal_I2C lcd(0x27, 16, 2);  // 0x27 địa chỉ LCD, 16 cột và 2 hàng
@@ -16,7 +15,7 @@ int e2 = 10;
 int i1 = 9;
 int i2 = 8;
 int ls1 = 7;
-int ls2 = 6;
+int ls2 = 6;  
 int RedLed = 20;
 int H = 160;
 int rls1;
@@ -35,18 +34,19 @@ byte va[] = {
   B10010,
   B01101
 };
+
 const byte ROWS = 4;
 const byte COLS = 4;
 char password[5];
-char On_equip[] = "4242";   // Mật khẩu mở cửa
-char Off_equip[] = "1212";  // Mật khẩu đóng cửa
+char On_equip[] = "4444";   // Mật khẩu mở cửa
+char Off_equip[] = "1111";  // Mật khẩu đóng cửa
 int i = 0;
 int on = 0;
 char MatrixKey[ROWS][COLS] = {
   { '1', '2', '3', 'A' },
   { '4', '5', '6', 'B' },
   { '7', '8', '9', 'C' },
-  { '*', '0', '#', 'D' }
+  { '*', '0', '#', 'D' }   
 };
 byte rowPins[ROWS] = { 14, 15, 16, 17 };  // R1,R2,R3,R4
 byte colPins[COLS] = { 18, 19, 2, 3 };    // C1,C2,C3,C4
@@ -294,16 +294,16 @@ void cardRFID() {
     lcd.setCursor(4, 0);
     lcd.print("MO CUA ");
     forward();
-    while (rls2) {
-      rls2 = digitalRead(ls2);
-    }
-    if (rls2 == 0) {
-      x = 0;
-      stop();
-    }
+while (digitalRead(ls2) != 0) {  // Kiểm tra khi cửa chưa mở hẳn
+  // Bạn có thể thêm các xử lý khác ở đây nếu cần
+}
+if (digitalRead(ls2) == 0) {  // Khi cửa đã mở hoàn toàn (rls2 == 0)
+  x = 0;  // Cập nhật trạng thái cửa là mở
+  stop();  // Dừng động cơ
+}
 
-    lcd.clear();
-    please();
+lcd.clear();  // Xóa màn hình LCD
+please();     // Hiển thị trạng thái cửa
   } else {
     lcd.clear();
     lcd.setCursor(2, 0);
@@ -316,45 +316,76 @@ void cardRFID() {
     Serial.println(" Access denied");
   }
 }
-void checkESPCommand() {
-  if (Serial1.available() > 0) {                     // Kiểm tra dữ liệu từ ESP8266 qua Serial
-    String command = Serial1.readStringUntil('\n');  // Đọc lệnh từ ESP8266
-    command.trim();                                 // Loại bỏ khoảng trắng hoặc ký tự xuống dòng
+ bool waitingForRLS2 = false;  // Trạng thái đang chờ rls2 = 0
+String currentCommand = "";   // Lệnh hiện tại từ ESP
 
-    if (command == "ON") {
-      lcd.clear();
-      lcd.print("ESP: Open Door");
-      forward();  // Mở cửa
-      while (rls2) {
-        rls2 = digitalRead(ls2);
+void checkESPCommand() {
+  if (Serial1.available() > 0) {                     
+    String command = Serial1.readStringUntil('\n');  
+    command.trim();                                  
+    Serial.println(command);
+
+    // Chỉ xử lý khi lệnh thay đổi
+    if (command != currentCommand) {
+      currentCommand = command; // Cập nhật lệnh hiện tại
+      
+      if (command == "ON") {
+        lcd.clear();
+        lcd.print("ESP: Open Door");
+        
+        // Kiểm tra trạng thái cửa và mở cửa nếu cần
+        if (x == 1) {
+          forward();  // Mở cửa
+          while (rls2) { rls2 = digitalRead(ls2); }  // Chờ cửa mở hoàn toàn
+          if (rls2 == 0) {
+            stop();
+            x = 0;  // Cập nhật trạng thái cửa mở
+          }
+        }
+        
+        waitingForRLS2 = true;  // Bắt đầu kiểm tra rls2
+      } else if (command == "OFF") {
+        lcd.clear();
+        lcd.print("ESP: Close Door");
+        
+        // Kiểm tra trạng thái cửa và đóng cửa nếu cần
+        if (x == 0) {
+          goback();  // Đóng cửa
+          while (rls1) { rls1 = digitalRead(ls1); }  // Chờ cửa đóng hoàn toàn
+          if (rls1 == 0) {
+            stop();
+            x = 1;  // Cập nhật trạng thái cửa đóng
+          }
+        }
+
+        waitingForRLS2 = false;  // Hủy kiểm tra rls2
+        stop();  // Dừng động cơ
       }
-      if (rls2 == 0) {
-        stop();
-      }
+      
       lcd.clear();
-      please();
-    } else if (command == "OFF") {
+      please();  // Hiển thị trạng thái
+    }
+  }
+
+  // Kiểm tra trạng thái rls2 khi đang mở cửa
+  if (waitingForRLS2) {
+    if (digitalRead(ls2) == 0) {  // Nếu rls2 = 0
+      stop();  // Dừng động cơ
       lcd.clear();
-      lcd.print("ESP: Close Door");
-      goback();  // Đóng cửa
-      while (rls1) {
-        rls1 = digitalRead(ls1);
-      }
-      if (rls1 == 0) {
-        stop();
-      }
-      lcd.clear();
-      please();
+      lcd.print("Door Stopped");
+      waitingForRLS2 = false;  // Ngừng kiểm tra rls2
+      // Chờ lệnh mới từ ESP
     }
   }
 }
+
 
 void loop() {
   rls1 = digitalRead(ls1);
   rls2 = digitalRead(ls2);
 
-  // Gửi trạng thái qua Serial (ESP8266)
-  Serial.print(rls1);
+  // Gửi trạng thái qua Serial (ESP8266) vậy này là gì
+  Serial.println(rls1);
   Serial.println(rls2);
   closedoor();
   keypad();
