@@ -164,23 +164,20 @@ void keypad()
       // delay(10000);
       forward();
       Serial.println(rls2);
-      while (rls2) {
-        rls2 = digitalRead(ls2);
-      }
-      if (rls2 == 0) {
-        x = 0;
-        // Serial.println("open door1");
-        stop();
-      }
-      // if(rls)
-      //  delay(3000);
+   while (digitalRead(ls2) == 1) {
+  // Chờ cho đến khi rls2 trở thành 0
+  delay(10); // Thêm delay nhỏ để tránh việc kiểm tra quá nhanh và giúp hệ thống ổn định
+}
 
-      //  Serial.println("stop");
-      //  delay(5000);
-      lcd.clear();
-      please();
-      i = 0;
-      // Serial.println(" Dung mat khau mo cua!");
+if (digitalRead(ls2) == 0) {
+  x = 0;
+  stop();
+}
+
+lcd.clear();
+please();
+i = 0;
+ 
     }
 
     if (!strcmp(password, Off_equip)) {
@@ -189,17 +186,21 @@ void keypad()
       lcd.print("     Closed!");
       digitalWrite(RedLed, LOW);
       goback();
-      while (rls1) {
-        rls1 = digitalRead(ls1);
-      }
-      if (rls1 == 0) {
-        x = 1;
-        // Serial.println("close door1");
-        stop();
-      }
-      lcd.clear();
-      please();
-      i = 0;
+     while (digitalRead(ls1) == 1) {
+  // Chờ cho đến khi rls1 trở thành 0
+  delay(10); // Thêm delay nhỏ để tránh việc kiểm tra quá nhanh và giúp hệ thống ổn định
+}
+
+if (digitalRead(ls1) == 0) {
+  x = 1;
+  // Serial.println("close door1");
+  stop();
+}
+
+lcd.clear();
+please();
+i = 0;
+
     }
 
     if (strcmp(password, On_equip)) {
@@ -224,27 +225,30 @@ void keypad()
 
 void control_closedoor() {
   if (x == 0) {
-    //  Serial.println("close door");
-    goback();
-    while (rls1) {
-      rls1 = digitalRead(ls1);
-    }
-    if (rls1 == 0) {
-      stop();
-      x = 1;
-    }
-
-  } else if (x == 1) {
-    // Serial.println("open door door");
-    forward();
-    while (rls2) {
-      rls2 = digitalRead(ls2);
-    }
-    if (rls2 == 0) {
-      stop();
-      x = 0;
-    }
+  // Serial.println("close door");
+  goback(); // Giả sử hàm goback() di chuyển cửa về vị trí đóng
+  while (digitalRead(ls1) == 1) {
+    // Chờ cho đến khi cảm biến ls1 thay đổi giá trị (từ 1 về 0)
+    delay(10); // Thêm thời gian delay để tránh kiểm tra quá nhanh
   }
+  if (digitalRead(ls1) == 0) {
+    stop(); // Dừng động cơ khi cửa đã đóng
+    x = 1; // Đổi trạng thái cửa sang mở
+  }
+  
+} else if (x == 1) {
+  // Serial.println("open door");
+  forward(); // Giả sử hàm forward() di chuyển cửa ra ngoài
+  while (digitalRead(ls2) == 1) {
+    // Chờ cho đến khi cảm biến ls2 thay đổi giá trị (từ 1 về 0)
+    delay(10); // Thêm thời gian delay để tránh kiểm tra quá nhanh
+  }
+  if (digitalRead(ls2) == 0) {
+    stop(); // Dừng động cơ khi cửa đã mở hoàn toàn
+    x = 0; // Đổi trạng thái cửa sang đóng
+  }
+}
+
 }
 void closedoor() {
   if (digitalRead(bt1) == 0) {
@@ -316,6 +320,8 @@ please();     // Hiển thị trạng thái cửa
     Serial.println(" Access denied");
   }
 }
+
+
  bool waitingForRLS2 = false;  // Trạng thái đang chờ rls2 = 0
 String currentCommand = "";   // Lệnh hiện tại từ ESP
 
